@@ -41,6 +41,8 @@ func TestParse(t *testing.T) {
 
 	instance.ServeHTTP(recorder, req)
 
+	assertHeader(t, req, mw.DeviceBotHeader, "false")
+
 	assertHeader(t, req, mw.DeviceMobileHeader, "false")
 	assertHeader(t, req, mw.DeviceOsHeader, "Linux")
 
@@ -49,6 +51,29 @@ func TestParse(t *testing.T) {
 
 	assertHeader(t, req, mw.DeviceEngineHeader, "AppleWebKit")
 	assertHeader(t, req, mw.DeviceEngineVersionHeader, "537.11")
+}
+
+func TestParseBot(t *testing.T) {
+	next := http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {})
+
+	instance, _ := mw.New(context.TODO(), next, mw.CreateConfig(), "traefikuseragent")
+
+	recorder := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodGet, "http://localhost", nil)
+	req.Header.Set(mw.UserAgentHeader, "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)")
+
+	instance.ServeHTTP(recorder, req)
+
+	assertHeader(t, req, mw.DeviceBotHeader, "true")
+
+	assertHeader(t, req, mw.DeviceMobileHeader, "false")
+	assertHeader(t, req, mw.DeviceOsHeader, "")
+
+	assertHeader(t, req, mw.DeviceBrowserHeader, "Googlebot")
+	assertHeader(t, req, mw.DeviceBrowserVersionHeader, "2.1")
+
+	assertHeader(t, req, mw.DeviceEngineHeader, "")
+	assertHeader(t, req, mw.DeviceEngineVersionHeader, "")
 }
 
 func TestParseNoHeader(t *testing.T) {
@@ -60,6 +85,8 @@ func TestParseNoHeader(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "http://localhost", nil)
 
 	instance.ServeHTTP(recorder, req)
+
+	assertHeader(t, req, mw.DeviceBotHeader, "false")
 
 	assertHeader(t, req, mw.DeviceMobileHeader, "false")
 	assertHeader(t, req, mw.DeviceOsHeader, "")
@@ -81,6 +108,8 @@ func TestParseBadFormat(t *testing.T) {
 	req.Header.Set(mw.UserAgentHeader, "123asd")
 
 	instance.ServeHTTP(recorder, req)
+
+	assertHeader(t, req, mw.DeviceBotHeader, "false")
 
 	assertHeader(t, req, mw.DeviceMobileHeader, "false")
 	assertHeader(t, req, mw.DeviceOsHeader, "")
