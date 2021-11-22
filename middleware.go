@@ -13,6 +13,9 @@ const (
 	// UserAgentHeader header.
 	UserAgentHeader = "User-Agent"
 
+	// DeviceBotHeader header.
+	DeviceBotHeader = "X-Device-Bot"
+
 	// DeviceMobileHeader header.
 	DeviceMobileHeader = "X-Device-Mobile"
 	// DeviceOsHeader header.
@@ -53,6 +56,8 @@ func New(ctx context.Context, next http.Handler, config *Config, name string) (h
 
 func (mw *TraefikUserAgent) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	ua := user_agent.New(req.Header.Get(UserAgentHeader))
+
+	req.Header.Set(DeviceBotHeader, strconv.FormatBool(ua.Bot()))
 
 	req.Header.Set(DeviceMobileHeader, strconv.FormatBool(ua.Mobile()))
 	req.Header.Set(DeviceOsHeader, ua.OSInfo().Name)
